@@ -20,6 +20,18 @@ const getOptionalInput = (name: string) => core.getInput(name) || undefined;
     process.chdir(inputCwd);
   }
 
+  const baseBranch = core.getInput("branch");
+  if (!baseBranch) {
+    core.setFailed("Please add the branch to the changesets action");
+    return;
+  }
+
+  const registry = core.getInput("registry");
+  if (!registry) {
+    core.setFailed("Please add the registry to the changesets action");
+    return;
+  }
+
   let setupGitUser = core.getBooleanInput("setupGitUser");
 
   if (setupGitUser) {
@@ -61,7 +73,7 @@ const getOptionalInput = (name: string) => core.getInput(name) || undefined;
         const userNpmrcContent = await fs.readFile(userNpmrcPath, "utf8");
         const authLine = userNpmrcContent.split("\n").find((line) => {
           // check based on https://github.com/npm/cli/blob/8f8f71e4dd5ee66b3b17888faad5a7bf6c657eed/test/lib/adduser.js#L103-L105
-          return /^\s*\/\/registry\.npmjs\.org\/:[_-]authToken=/i.test(line);
+          return /^\s*\/\/(.*?)\/:[_-]authToken=/i.test(line);
         });
         if (authLine) {
           core.info(
@@ -73,14 +85,14 @@ const getOptionalInput = (name: string) => core.getInput(name) || undefined;
           );
           fs.appendFileSync(
             userNpmrcPath,
-            `\n//registry.npmjs.org/:_authToken=${process.env.NPM_TOKEN}\n`
+            `\n//${registry}/:_authToken=${process.env.NPM_TOKEN}\n`
           );
         }
       } else {
         core.info("No user .npmrc file found, creating one");
         fs.writeFileSync(
           userNpmrcPath,
-          `//registry.npmjs.org/:_authToken=${process.env.NPM_TOKEN}\n`
+          `//${registry}/:_authToken=${process.env.NPM_TOKEN}\n`
         );
       }
 
