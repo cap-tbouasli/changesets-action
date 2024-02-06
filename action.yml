@@ -4,6 +4,14 @@ runs:
   using: "node16"
   main: "dist/index.js"
 inputs:
+  branch:
+    description: "Which branch to create the PR to"
+    required: false
+    default: "master"
+  registry:
+    description: "The registry to use"
+    required: false
+    default: "registry.npmjs.org"
   publish:
     description: "The command to use to build and publish packages"
     required: false
